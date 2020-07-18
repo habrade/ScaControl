@@ -268,7 +268,7 @@ dac_inter8568 dac_inter8568_tof(
 //    .probe10(current_state) // input wire [15:0]  probe10
 //);
 
-Pixel_SCA Pixel_SCA_inst(
+sca_control sca_control_inst(
 .rst( CPU_RESET ),
 .clk_125( clk_125M ),   // 125M --- 8ns
 
