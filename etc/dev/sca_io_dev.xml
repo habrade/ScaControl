@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<node>
+    <node address="0x1" mask="0x00000001" id="start_pad"  permission="rw"/>
+    <node address="0x1" mask="0x00000002" id="trigger_pad"  permission="rw"/>
+    <node address="0x1" mask="0x00000004" id="enable_r_dff" permission="rw"/>
+    <node address="0x1" mask="0x00000008" id="din_dff" permission="rw"/>
+    <node address="0x1" mask="0x00000010" id="bit_0_cp" permission="rw"/>
+    <node address="0x1" mask="0x00000020" id="bit_1_cp" permission="rw"/>
+</node>
+

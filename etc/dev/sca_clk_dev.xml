@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<node> 
+      <node id="clkout0__shared_reg" address="0x07" />
+      <node id="clkout0_reg1" address="0x08" />
+      <node id="clkout0_reg2" address="0x09" />
+      <node id="clkfbout_shared_reg" address="0x13" />
+      <node id="clkfbout_reg1" address="0x14" />
+      <node id="clkfbout_reg2" address="0x15" />
+      <node id="div_reg" address="0x16" />
+      <node id="lock_reg1" address="0x18" />
+      <node id="lock_reg2" address="0x19" />
+      <node id="lock_reg3" address="0x1a" />
+      <node id="power_reg" address="0x28" />
+      <node id="filter_reg1" address="0x4e" />
+      <node id="filter_reg2" address="0x4f" />
+</node>
+
