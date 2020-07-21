@@ -61,8 +61,13 @@ architecture rtl of top is
   constant N_DRP  : integer := 2;
   signal drp_m2s:  drp_wbus_array(N_DRP-1 downto 0);
   signal drp_s2m:  drp_rbus_array(N_DRP-1 downto 0);
+  signal clk_REF, clk_DFF : std_logic;
+  signal sca_clocks_locked : std_logic_vector(N_DRP-1 downto 0);
 
 
+  -- FREQ Counter
+  constant N_CLK  : integer := 2;
+  signal clk_sca, clk_sca_div : std_logic_vector(N_CLK -1 downto 0);
 begin
 
 -- Infrastructure
@@ -107,7 +112,8 @@ begin
 
   ipbus_payload : entity work.ipbus_payload
     generic map(
-      N_DRP => N_DRP
+      N_DRP => N_DRP,
+      N_CLK => N_CLK
     )
     port map(
       ipb_clk        => clk_ipb,
@@ -141,7 +147,9 @@ begin
       bit_1_cp=> bit_1_cp,
       -- MMCM DRP Ports
       drp_out => drp_m2s,
-	  drp_in => drp_s2m
+	  drp_in => drp_s2m,
+	  -- FREQ CTR
+	  clk_ctr_in => clk_sca_div
       );
 
   inst_dac_8568 : entity work.dac_inter8568
@@ -172,13 +180,42 @@ begin
     port map(
       rst         => rst,
       clk_125     => clk_125M,
-      clk_REF_p     => clk_REF_p,
-      clk_REF_n     => clk_REF_n,
-      clk_DFF_p     => clk_DFF_p,
-      clk_DFF_n     => clk_DFF_n,
+      clk_REF     => clk_REF,
+      clk_DFF     => clk_DFF,
+      locked      => sca_clocks_locked,
       -- MMCM DRP Ports
       drp_out => drp_s2m,
 	  drp_in => drp_m2s
       );
+  
+  clk_REF_OBUFDS_inst : OBUFDS
+   generic map (
+      IOSTANDARD => "DEFAULT", -- Specify the output I/O standard
+      SLEW => "SLOW")          -- Specify the output slew rate
+   port map (
+      O => clk_REF_p,     -- Diff_p output (connect directly to top-level port)
+      OB => clk_REF_n,   -- Diff_n output (connect directly to top-level port)
+      I => clk_REF      -- Buffer input 
+   );
+   
+   clk_DFF_OBUFDS_inst : OBUFDS
+   generic map (
+      IOSTANDARD => "DEFAULT", -- Specify the output I/O standard
+      SLEW => "SLOW")          -- Specify the output slew rate
+   port map (
+      O => clk_DFF_p,     -- Diff_p output (connect directly to top-level port)
+      OB => clk_DFF_n,   -- Diff_n output (connect directly to top-level port)
+      I => clk_DFF      -- Buffer input 
+   );     
+ 
+  clk_sca <= clk_DFF & clk_REF; 
+  inst_freq_div: entity work.freq_ctr_div
+	generic map(
+		N_CLK => N_CLK
+	)
+	port map(
+		clk => clk_sca,
+		clkdiv =>  clk_sca_div
+	);
 
 end rtl;

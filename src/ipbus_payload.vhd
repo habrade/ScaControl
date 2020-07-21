@@ -7,7 +7,8 @@ use work.drp_decl.all;
 
 entity ipbus_payload is
   generic(
-    N_DRP : integer := 2
+    N_DRP : integer := 2;
+    N_CLK : integer := 2
     );
   port(
     ipb_clk : in  std_logic;
@@ -44,7 +45,9 @@ entity ipbus_payload is
     bit_1_cp     : out std_logic;
     -- MMCM DRP Ports
     drp_out      : out drp_wbus_array(N_DRP-1 downto 0);
-    drp_in       : in  drp_rbus_array(N_DRP-1 downto 0)
+    drp_in       : in  drp_rbus_array(N_DRP-1 downto 0);
+    -- FREQ CTR
+    clk_ctr_in : in std_logic_vector(N_CLK-1 downto 0)
     );
 
 end ipbus_payload;
@@ -140,6 +143,19 @@ begin
       drp_out => drp_out(1),
       drp_in  => drp_in(1)
       );
+      
+  slave5: entity work.ipbus_freq_ctr
+    generic map(
+		N_CLK => N_CLK
+	)
+	port map(
+		clk=> ipb_clk,
+		rst=> ipb_rst,
+		ipb_in => ipbw(N_SLV_FREQ_CTR),
+		ipb_out => ipbr(N_SLV_FREQ_CTR),
+		clkdiv => clk_ctr_in
+	);
+
 
 end rtl;
 

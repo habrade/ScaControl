@@ -7,6 +7,7 @@ import logging
 
 from lib.global_device import GlobalDevice
 from lib.sca_device import ScaDevice
+from lib.freq_ctr_device import FreqCtr
 
 ######################################################################
 
@@ -18,9 +19,6 @@ __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
 if __name__ == '__main__':
-    # if len(sys.argv) < 3:
-    #     log.info("Please specify the device IP address and the top-level address table file to use")
-    #     sys.exit(1)
     device_ip = "192.168.200.106"
     device_uri = "ipbusudp-2.0://" + device_ip + ":50001"
     # address_table_name = sys.argv[2]
@@ -32,16 +30,19 @@ if __name__ == '__main__':
 
     global_dev = GlobalDevice(hw)
     sca_dev = ScaDevice(hw)
+    freq_ctr_dev = FreqCtr(hw)
 
     ## Soft reset
     global_dev.set_soft_rst()
 
     ## Set Sca Clocks
-    ## parameters: Do, M, D
-    ## clkin = 125MHz
+    ## parameters: Do, M, D, clkin = 125MHz
     ## Frq: (clkin * M)/(DO * D)
     sca_dev.set_clock(1, 1, 1, "clk_ref")
     sca_dev.set_clock(1, 1, 1, "clk_dff")
+
+    ## Frequency counter
+    freq_ctr_dev.get_chn_freq(0)
 
     ## Set Sca IO
     sca_dev.set_bit0(True)

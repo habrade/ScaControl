@@ -23,7 +23,8 @@ package ipbus_decode_payload is
   constant N_SLV_SCA_IO      : integer := 2;
   constant N_SLV_SCA_REFCLK  : integer := 3;
   constant N_SLV_SCA_DFFCLK  : integer := 4;
-  constant N_SLAVES          : integer := 5;
+  constant N_SLV_FREQ_CTR    : integer := 5;
+  constant N_SLAVES          : integer := 6;
 -- END automatically generated VHDL
 
 
@@ -36,15 +37,17 @@ package body ipbus_decode_payload is
   begin
 
     if std_match(addr, "000-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_GLOBAL, IPBUS_SEL_WIDTH));  -- csr / base 0x00000000 / mask 0x00003002
+      sel := ipbus_sel_t(to_unsigned(N_SLV_GLOBAL, IPBUS_SEL_WIDTH));  
     elsif std_match(addr, "001-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_DAC8568, IPBUS_SEL_WIDTH));  -- csr / base 0x00000000 / mask 0x00003002
+      sel := ipbus_sel_t(to_unsigned(N_SLV_DAC8568, IPBUS_SEL_WIDTH)); 
     elsif std_match(addr, "010-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_IO, IPBUS_SEL_WIDTH));  -- csr / base 0x00000000 / mask 0x00003002
+      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_IO, IPBUS_SEL_WIDTH)); 
     elsif std_match(addr, "011-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_REFCLK, IPBUS_SEL_WIDTH));  -- csr / base 0x00000000 / mask 0x00003002
+      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_REFCLK, IPBUS_SEL_WIDTH));
     elsif std_match(addr, "100-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_DFFCLK, IPBUS_SEL_WIDTH));  -- csr / base 0x00000000 / mask 0x00003002
+      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_DFFCLK, IPBUS_SEL_WIDTH));
+    elsif std_match(addr, "101-----------------------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_FREQ_CTR, IPBUS_SEL_WIDTH));
     else
       sel := ipbus_sel_t(to_unsigned(N_SLAVES, IPBUS_SEL_WIDTH));
     end if;

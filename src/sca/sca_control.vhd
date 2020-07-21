@@ -43,10 +43,9 @@ entity sca_control is
     clk_125 : in std_logic;
 
     -- SCA Clocks
-    clk_REF_p : out std_logic;
-    clk_REF_n : out std_logic;
-    clk_DFF_p : out std_logic;
-    clk_DFF_n : out std_logic;
+    clk_REF : out std_logic;
+    clk_DFF : out std_logic;
+    locked  : out std_logic_vector(N_DRP-1 downto 0);
 
     -- MMCM DRP Ports
     drp_out: out drp_rbus_array(N_DRP-1 downto 0);
@@ -56,25 +55,17 @@ end sca_control;
 
 architecture behv of sca_control is
 
-  signal clkout0_p_arr: std_logic_vector(N_DRP-1 downto 0);
-  signal clkout0_n_arr: std_logic_vector(N_DRP-1 downto 0);
-    
+  signal clkout0_arr: std_logic_vector(N_DRP-1 downto 0);    
 
   signal clkin_bufgout, CLKIN_ibuf : std_logic;
   signal clkfb_bufgout, clkfb_bufgin : std_logic_vector(N_DRP-1 downto 0);
   
---  signal drp_addr : std_logic_vector (6 downto 0);
-
 begin
-  
---  drp_addr <= drp_in.addr(6 downto 0);
-  
+    
   CLKIN_ibuf <= clk_125;
   
-  clk_REF_p <= clkout0_p_arr(0);
-  clk_REF_n <= clkout0_n_arr(0);
-  clk_DFF_p <= clkout0_p_arr(1);
-  clk_DFF_n <= clkout0_n_arr(1);
+  clk_REF <= clkout0_arr(0);
+  clk_DFF <= clkout0_arr(1);
   
   BUFG_IN : BUFG port map(O => clkin_bufgout, I => CLKIN_ibuf);
 
@@ -137,8 +128,9 @@ begin
           )
         port map (
           -- Clock Outputs: 1-bit (each) output: User configurable clock outputs
-          CLKOUT0 => clkout0_p_arr(drp_index),  -- 1-bit output: CLKOUT0
-          CLKOUT0B => clkout0_n_arr(drp_index),  -- 1-bit output: Inverted CLKOUT0
+          CLKOUT0 => clkout0_arr(drp_index),  -- 1-bit output: CLKOUT0
+--          CLKOUT0B => clkout0_n_arr(drp_index),  -- 1-bit output: Inverted CLKOUT0
+          CLKOUT0B => open,  -- 1-bit output: Inverted CLKOUT0
           CLKOUT1 => open,  -- 1-bit output: CLKOUT1
           CLKOUT1B => open,  -- 1-bit output: Inverted CLKOUT1
           CLKOUT2 => open,  -- 1-bit output: CLKOUT2
@@ -159,7 +151,7 @@ begin
           -- Status Ports: 1-bit (each) output: MMCM status ports
           CLKFBSTOPPED => open,  -- 1-bit output: Feedback clock stopped
           CLKINSTOPPED => open,  -- 1-bit output: Input clock stopped
-          LOCKED => open,  -- 1-bit output: LOCK
+          LOCKED => locked(drp_index),  -- 1-bit output: LOCK
           -- Clock Inputs: 1-bit (each) input: Clock inputs
           CLKIN1 => clkin_bufgout,  -- 1-bit input: Primary clock
           CLKIN2 => '0',  -- 1-bit input: Secondary clock

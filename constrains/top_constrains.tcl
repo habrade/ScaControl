@@ -47,13 +47,6 @@ set_property PACKAGE_PIN N16 [get_ports {leds[2]}]
 set_property PACKAGE_PIN K21 [get_ports {leds[3]}]
 false_path {leds[*]} sysclk
 
-#set_property IOSTANDARD LVCMOS25 [get_ports {dip_sw[*]}]
-#set_property PACKAGE_PIN Y29 [get_ports {dip_sw[0]}]
-#set_property PACKAGE_PIN W29 [get_ports {dip_sw[1]}]
-#set_property PACKAGE_PIN AA28 [get_ports {dip_sw[2]}]
-#set_property PACKAGE_PIN Y28 [get_ports {dip_sw[3]}]
-#false_path {dip_sw[*]} sysclk
-
 set_property IOSTANDARD LVCMOS25 [get_ports {gmii* phy_rst}]
 set_property PACKAGE_PIN J15 [get_ports {gmii_gtx_clk}]
 set_property PACKAGE_PIN H18  [get_ports {gmii_tx_en}]
@@ -121,12 +114,17 @@ set_property IOSTANDARD  LVCMOS25  [get_ports bit_1_cp]
 
 # IPbus clock
 create_generated_clock -name ipbus_clk -source [get_pins ipbus_infra/clocks/mmcm/CLKIN1] [get_pins ipbus_infra/clocks/mmcm/CLKOUT3]
+create_generated_clock -name clk_125M -source [get_pins ipbus_infra/clocks/mmcm/CLKIN1] [get_pins ipbus_infra/clocks/mmcm/CLKOUT1]
 
 # Other derived clocks
 create_generated_clock -name clk_aux -source [get_pins ipbus_infra/clocks/mmcm/CLKIN1] [get_pins ipbus_infra/clocks/mmcm/CLKOUT4]
+create_generated_clock -name clk_REF -source [get_pins inst_sca_control/mmcm2e_drp_gen[0].MMCME2_ADV_inst/CLKIN1] [get_pins inst_sca_control/mmcm2e_drp_gen[0].MMCME2_ADV_inst/CLKOUT0]
+create_generated_clock -name clk_DFF -source [get_pins inst_sca_control/mmcm2e_drp_gen[1].MMCME2_ADV_inst/CLKIN1] [get_pins inst_sca_control/mmcm2e_drp_gen[1].MMCME2_ADV_inst/CLKOUT0]
 
 set_false_path -through [get_pins ipbus_infra/clocks/rst_reg/Q]
 set_false_path -through [get_nets ipbus_infra/clocks/nuke_i]
 
 
 set_clock_groups -asynchronous -group [get_clocks ipbus_clk] -group [get_clocks -include_generated_clocks [get_clocks clk_aux]]
+set_clock_groups -asynchronous -group [get_clocks ipbus_clk] -group [get_clocks -include_generated_clocks [get_clocks clk_REF]]
+set_clock_groups -asynchronous -group [get_clocks ipbus_clk] -group [get_clocks -include_generated_clocks [get_clocks clk_DFF]]
