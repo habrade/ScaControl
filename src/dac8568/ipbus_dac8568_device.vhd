@@ -71,7 +71,8 @@ begin
   inst_ipbus_slave : entity work.ipbus_ctrlreg_v
     generic map(
       N_CTRL => N_CTRL,
-      N_STAT => N_STAT
+      N_STAT => N_STAT,
+      SWAP_ORDER => true
       )
     port map(
       clk       => ipb_clk,

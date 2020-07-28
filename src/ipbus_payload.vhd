@@ -15,6 +15,9 @@ entity ipbus_payload is
     ipb_rst : in  std_logic;
     ipb_in  : in  ipb_wbus;
     ipb_out : out ipb_rbus;
+    
+    clk     : in  std_logic;
+    rst     : in  std_logic;
 
     -- Global
     nuke     : out std_logic;
@@ -44,6 +47,8 @@ entity ipbus_payload is
     bit_0_cp     : out std_logic;
     bit_1_cp     : out std_logic;
     -- MMCM DRP Ports
+    locked     : in  std_logic_vector(N_DRP-1 downto 0);
+    rst_mmcm   : out std_logic_vector(N_DRP-1 downto 0);
     drp_out      : out drp_wbus_array(N_DRP-1 downto 0);
     drp_in       : in  drp_rbus_array(N_DRP-1 downto 0);
     -- FREQ CTR
@@ -107,44 +112,36 @@ begin
       dac8568_data_h => dac8568_data_h
       );
 
-  slave2 : entity work.ipbus_sca_io_device
-    port map(
-      ipb_clk      => ipb_clk,
-      ipb_rst      => ipb_rst,
-      ipb_in       => ipbw(N_SLV_SCA_IO),
-      ipb_out      => ipbr(N_SLV_SCA_IO),
-      -- Control Port
-      start_pad    => start_pad,
-      trigger_pad  => trigger_pad,
-      enable_r_dff => enable_r_dff,
-      din_dff      => din_dff,
-      bit_0_cp     => bit_0_cp,
-      bit_1_cp     => bit_1_cp
-      );
-
-  slave3 : entity work.ipbus_sca_clk_device
+   slave2 : entity work.ipbus_sca_device
+    generic map(
+      N_DRP => N_DRP
+    )
     port map(
       ipb_clk => ipb_clk,
       ipb_rst => ipb_rst,
-      ipb_in  => ipbw(N_SLV_SCA_REFCLK),
-      ipb_out => ipbr(N_SLV_SCA_REFCLK),
-      -- MMCM DRP Ports
-      drp_out => drp_out(0),
-      drp_in  => drp_in(0)
-      );
-
-  slave4 : entity work.ipbus_sca_clk_device
-    port map(
-      ipb_clk => ipb_clk,
-      ipb_rst => ipb_rst,
-      ipb_in  => ipbw(N_SLV_SCA_DFFCLK),
-      ipb_out => ipbr(N_SLV_SCA_DFFCLK),
-      -- MMCM DRP Ports
-      drp_out => drp_out(1),
-      drp_in  => drp_in(1)
-      );
+      ipb_in  => ipbw(N_SLV_SCA),
+      ipb_out => ipbr(N_SLV_SCA),
       
-  slave5: entity work.ipbus_freq_ctr
+      reg_slv_clk  => clk,
+      reg_slv_rst  => rst,
+
+      -- SCA IO PORTS
+      start_pad    => open,
+      trigger_pad  => open,
+      enable_r_dff => open,
+      din_dff      => open,
+      bit_0_cp     => open,
+      bit_1_cp     => open,
+
+      -- MMCM DRP Ports.
+      locked   => locked,
+      rst_mmcm => rst_mmcm,
+      drp_out  => drp_out,
+      drp_in   => drp_in
+      );
+
+      
+  slave3: entity work.ipbus_freq_ctr
     generic map(
 		N_CLK => N_CLK
 	)

@@ -13,18 +13,16 @@ use ieee.numeric_std.all;
 
 package ipbus_decode_payload is
 
-  constant IPBUS_SEL_WIDTH        :    positive := 3;  -- Should be enough for now?
+  constant IPBUS_SEL_WIDTH        :    positive := 2;  -- Should be enough for now?
   subtype ipbus_sel_t is std_logic_vector(IPBUS_SEL_WIDTH - 1 downto 0);
   function ipbus_sel_payload(addr : in std_logic_vector(31 downto 0)) return ipbus_sel_t;
 
 -- START automatically  generated VHDL the Thu May  3 15:36:57 2018 
   constant N_SLV_GLOBAL      : integer := 0;
   constant N_SLV_DAC8568     : integer := 1;
-  constant N_SLV_SCA_IO      : integer := 2;
-  constant N_SLV_SCA_REFCLK  : integer := 3;
-  constant N_SLV_SCA_DFFCLK  : integer := 4;
-  constant N_SLV_FREQ_CTR    : integer := 5;
-  constant N_SLAVES          : integer := 6;
+  constant N_SLV_SCA         : integer := 2;
+  constant N_SLV_FREQ_CTR    : integer := 3;
+  constant N_SLAVES          : integer := 4;
 -- END automatically generated VHDL
 
 
@@ -36,17 +34,13 @@ package body ipbus_decode_payload is
     variable sel : ipbus_sel_t;
   begin
 
-    if std_match(addr, "000-----------------------------") then
+    if std_match(addr, "00------------------------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_GLOBAL, IPBUS_SEL_WIDTH));  
-    elsif std_match(addr, "001-----------------------------") then
+    elsif std_match(addr, "01------------------------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_DAC8568, IPBUS_SEL_WIDTH)); 
-    elsif std_match(addr, "010-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_IO, IPBUS_SEL_WIDTH)); 
-    elsif std_match(addr, "011-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_REFCLK, IPBUS_SEL_WIDTH));
-    elsif std_match(addr, "100-----------------------------") then
-      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA_DFFCLK, IPBUS_SEL_WIDTH));
-    elsif std_match(addr, "101-----------------------------") then
+    elsif std_match(addr, "10------------------------------") then
+      sel := ipbus_sel_t(to_unsigned(N_SLV_SCA, IPBUS_SEL_WIDTH)); 
+    elsif std_match(addr, "11------------------------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_FREQ_CTR, IPBUS_SEL_WIDTH));
     else
       sel := ipbus_sel_t(to_unsigned(N_SLAVES, IPBUS_SEL_WIDTH));

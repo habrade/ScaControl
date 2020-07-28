@@ -31,47 +31,62 @@
 -- Dave Newbold, September 2013
 
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_1164.all;
 use ieee.numeric_std.all;
 use work.ipbus.all;
 use work.drp_decl.all;
 
 entity ipbus_drp_bridge is
-	port(
-		clk: in std_logic;
-		rst: in std_logic;
-		ipb_in: in ipb_wbus;
-		ipb_out: out ipb_rbus;
-		drp_out: out drp_wbus;
-		drp_in: in drp_rbus
-	);
-	
+  port(
+    clk     : in  std_logic;
+    rst     : in  std_logic;
+    ipb_in  : in  ipb_wbus;
+    ipb_out : out ipb_rbus;
+    drp_out : out drp_wbus;
+    drp_in  : in  drp_rbus
+    );
+
 end ipbus_drp_bridge;
 
 architecture rtl of ipbus_drp_bridge is
 
-	signal busy, cyc, stb, stb_d: std_logic;
+  signal busy, cyc, stb, stb_d : std_logic;
 
 begin
 
-	process(clk)
-	begin
-		if rising_edge(clk) then
-			busy <= (busy or cyc) and not (drp_in.rdy or rst);
-			stb_d <= stb;
-		end if;
-	end process;
-	
-	stb <= ipb_in.ipb_strobe and not busy;
-	cyc <= stb and not stb_d;
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      busy  <= (busy or cyc) and not (drp_in.rdy or rst);
+      stb_d <= stb;
+    end if;
+  end process;
 
-	drp_out.addr <= ipb_in.ipb_addr(15 downto 0);
-	drp_out.en <= cyc;
-	drp_out.data <= ipb_in.ipb_wdata(15 downto 0);
-	drp_out.we <= cyc and ipb_in.ipb_write;
+  stb <= ipb_in.ipb_strobe and not busy;
+  cyc <= stb and not stb_d;
 
-	ipb_out.ipb_ack <= drp_in.rdy and ipb_in.ipb_strobe;
-	ipb_out.ipb_err <= '0';
-	ipb_out.ipb_rdata <= X"0000" & drp_in.data;
+  process(rst)
+  begin
+    if (rst = '1') then
+      drp_out.addr <= (others => '0');
+      drp_out.en   <= '0';
+      drp_out.data <= (others => '0');
+      drp_out.we   <= '0';
+
+      ipb_out.ipb_ack   <= '0';
+      ipb_out.ipb_err   <= '0';
+      ipb_out.ipb_rdata <= (others => '0');
+    else
+
+      drp_out.addr <= ipb_in.ipb_addr(31 downto 16);
+      drp_out.en   <= cyc;
+      drp_out.data <= ipb_in.ipb_wdata(15 downto 0);
+      drp_out.we   <= cyc and ipb_in.ipb_write;
+
+      ipb_out.ipb_ack   <= drp_in.rdy and ipb_in.ipb_strobe;
+      ipb_out.ipb_err   <= '0';
+      ipb_out.ipb_rdata <= X"0000" & drp_in.data;
+    end if;
+  end process;
 
 end rtl;

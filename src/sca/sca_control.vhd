@@ -40,7 +40,7 @@ entity sca_control is
     );
   port(
     rst : in std_logic;
-    clk_125 : in std_logic;
+    clk : in std_logic;
 
     -- SCA Clocks
     clk_REF : out std_logic;
@@ -48,6 +48,7 @@ entity sca_control is
     locked  : out std_logic_vector(N_DRP-1 downto 0);
 
     -- MMCM DRP Ports
+    rst_mmcm     : in std_logic_vector(N_DRP-1 downto 0);
     drp_out: out drp_rbus_array(N_DRP-1 downto 0);
     drp_in: in drp_wbus_array(N_DRP-1 downto 0)
     );
@@ -56,13 +57,14 @@ end sca_control;
 architecture behv of sca_control is
 
   signal clkout0_arr: std_logic_vector(N_DRP-1 downto 0);    
+  signal rst_t:       std_logic_vector(N_DRP-1 downto 0);    
 
   signal clkin_bufgout, CLKIN_ibuf : std_logic;
   signal clkfb_bufgout, clkfb_bufgin : std_logic_vector(N_DRP-1 downto 0);
   
 begin
     
-  CLKIN_ibuf <= clk_125;
+  CLKIN_ibuf <= clk;
   
   clk_REF <= clkout0_arr(0);
   clk_DFF <= clkout0_arr(1);
@@ -72,14 +74,15 @@ begin
   mmcm2e_drp_gen: for drp_index in N_DRP-1 downto 0 generate
   
       BUFG_FB : BUFG port map(O => clkfb_bufgout(drp_index), I => clkfb_bufgin(drp_index));
+      gen_rst:  rst_t(drp_index) <= rst_mmcm(drp_index) or rst;
 
       MMCME2_ADV_inst : MMCME2_ADV
         generic map (
           BANDWIDTH => "OPTIMIZED",  -- Jitter programming (OPTIMIZED, HIGH, LOW)
-          CLKFBOUT_MULT_F => 5.0,  -- Multiply value for all CLKOUT (2.000-64.000).
+          CLKFBOUT_MULT_F => 25.0,  -- Multiply value for all CLKOUT (2.000-64.000).
           CLKFBOUT_PHASE => 0.0,  -- Phase offset in degrees of CLKFB (-360.000-360.000).
           -- CLKIN_PERIOD: Input clock period in ns to ps resolution (i.e. 33.333 is 30 MHz).
-          CLKIN1_PERIOD => 8.0,
+          CLKIN1_PERIOD => 6.25,   -- 160MHz
           CLKIN2_PERIOD => 0.0,
           -- CLKOUT0_DIVIDE - CLKOUT6_DIVIDE: Divide amount for CLKOUT (1-128)
           CLKOUT1_DIVIDE => 1,
@@ -88,7 +91,7 @@ begin
           CLKOUT4_DIVIDE => 1,
           CLKOUT5_DIVIDE => 1,
           CLKOUT6_DIVIDE => 1,
-          CLKOUT0_DIVIDE_F => 1.0,  -- Divide amount for CLKOUT0 (1.000-128.000).
+          CLKOUT0_DIVIDE_F => 50.0,  -- Divide amount for CLKOUT0 (1.000-128.000).
           -- CLKOUT0_DUTY_CYCLE - CLKOUT6_DUTY_CYCLE: Duty cycle for CLKOUT outputs (0.01-0.99).
           CLKOUT0_DUTY_CYCLE => 0.5,
           CLKOUT1_DUTY_CYCLE => 0.5,
@@ -107,7 +110,7 @@ begin
           CLKOUT6_PHASE => 0.0,
           CLKOUT4_CASCADE => false,  -- Cascade CLKOUT4 counter with CLKOUT6 (FALSE, TRUE)
           COMPENSATION => "ZHOLD",  -- ZHOLD, BUF_IN, EXTERNAL, INTERNAL
-          DIVCLK_DIVIDE => 1,  -- Master division value (1-106)
+          DIVCLK_DIVIDE => 4,  -- Master division value (1-106)
           -- REF_JITTER: Reference input jitter in UI (0.000-0.999).
           REF_JITTER1 => 0.0,
           REF_JITTER2 => 0.0,
@@ -158,10 +161,10 @@ begin
           -- Control Ports: 1-bit (each) input: MMCM control ports
           CLKINSEL => '1',  -- 1-bit input: Clock select, High=CLKIN1 Low=CLKIN2
           PWRDWN => '0',  -- 1-bit input: Power-down
-          RST => rst,  -- 1-bit input: Reset
+          RST => rst_t(drp_index),  -- 1-bit input: Reset
           -- DRP Ports: 7-bit (each) input: Dynamic reconfiguration ports
           DADDR => drp_in(drp_index).addr(6 downto 0),  -- 7-bit input: DRP address
-          DCLK => CLKIN_ibuf,  -- 1-bit input: DRP clock
+          DCLK => clkin_bufgout,  -- 1-bit input: DRP clock
           DEN => drp_in(drp_index).en,  -- 1-bit input: DRP enable
           DI => drp_in(drp_index).data,  -- 16-bit input: DRP data
           DWE => drp_in(drp_index).we,  -- 1-bit input: DRP write enable

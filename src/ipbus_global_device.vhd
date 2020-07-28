@@ -33,6 +33,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 use work.ipbus.ALL;
 use work.ipbus_reg_types.ALL;
+use work.ipbus_reg_types_new.ALL;
 
 
 entity ipbus_global_device is
@@ -50,17 +51,18 @@ end ipbus_global_device;
 
 architecture behv of ipbus_global_device is
 
-  constant N_STAT     : integer := 1;
+  constant N_STAT     : integer := 0;
   constant N_CTRL     : integer := 1;
-  signal stat : ipb_reg_v(N_STAT-1 downto 0);
-  signal ctrl : ipb_reg_v(N_CTRL-1 downto 0);
+  signal stat : ipb_reg_v(integer_max(N_STAT,1)-1 downto 0);
+  signal ctrl : ipb_reg_v(integer_max(N_CTRL,1)-1 downto 0);
 
 begin
 
     inst_ipbus_slave  : entity work.ipbus_ctrlreg_v
     generic map(
-      N_CTRL => N_STAT,
-      N_STAT => N_CTRL
+      N_CTRL => N_CTRL,
+      N_STAT => N_STAT,
+      SWAP_ORDER => TRUE
       )
     port map(
       clk       => ipb_clk,
@@ -73,5 +75,7 @@ begin
 
   nuke     <= ctrl(0)(0);
   soft_rst <= ctrl(0)(1);
+  
+  stat     <= (others=>(others=>'0'));
 
 end behv;

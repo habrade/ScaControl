@@ -39,9 +39,9 @@ class FreqCtr():
     def get_freq(self):
         reg_name = self.reg_name_base + "freq." + "count"
         node = self.hw.getNode(reg_name)
-        busy_raw = node.read()
+        freq_raw = node.read()
         self.hw.dispatch()
-        return busy_raw.value()
+        return freq_raw.value()
 
     def get_chn_freq(self, chn):
         self.get_chn_freq(chn)

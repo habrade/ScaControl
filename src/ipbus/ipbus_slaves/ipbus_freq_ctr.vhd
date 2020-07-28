@@ -81,7 +81,8 @@ begin
 	reg: entity work.ipbus_ctrlreg_v
 		generic map(
 			N_CTRL => 1,
-			N_STAT => 1
+			N_STAT => 1,
+            SWAP_ORDER => true
 		)
 		port map(
 			clk => clk,

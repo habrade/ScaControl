@@ -29,16 +29,16 @@ entity top is port(
   DAC_SYNC_N : out std_logic;
 
   -- SCA
-  clk_REF_p        : out std_logic;
-  clk_REF_n        : out std_logic;
-  clk_DFF_p        : out std_logic;
-  clk_DFF_n        : out std_logic;
-  start_pad   : out std_logic;
-  trigger_pad : out std_logic;
-  enable_r_dff      : out std_logic;
+  clk_REF_p    : out std_logic;
+  clk_REF_n    : out std_logic;
+  clk_DFF_p    : out std_logic;
+  clk_DFF_n    : out std_logic;
+  start_pad    : out std_logic;
+  trigger_pad  : out std_logic;
+  enable_r_dff : out std_logic;
   din_dff      : out std_logic;
-  bit_0_cp        : out std_logic;
-  bit_1_cp        : out std_logic);
+  bit_0_cp     : out std_logic;
+  bit_1_cp     : out std_logic);
 end top;
 
 architecture rtl of top is
@@ -58,21 +58,30 @@ architecture rtl of top is
   signal dac8568_data_e, dac8568_data_f, dac8568_data_g, dac8568_data_h : std_logic_vector(15 downto 0);
 
   -- SCA MMCM DRP
-  constant N_DRP  : integer := 2;
-  signal drp_m2s:  drp_wbus_array(N_DRP-1 downto 0);
-  signal drp_s2m:  drp_rbus_array(N_DRP-1 downto 0);
-  signal clk_REF, clk_DFF : std_logic;
+  constant N_DRP           : integer := 2;
+  signal rst_mmcm          : std_logic_vector(N_DRP-1 downto 0);
+  signal drp_m2s           : drp_wbus_array(N_DRP-1 downto 0);
+  signal drp_s2m           : drp_rbus_array(N_DRP-1 downto 0);
+  signal clk_REF, clk_DFF  : std_logic;
   signal sca_clocks_locked : std_logic_vector(N_DRP-1 downto 0);
 
 
   -- FREQ Counter
-  constant N_CLK  : integer := 2;
+
+  constant N_CLK              : integer := 2;
   signal clk_sca, clk_sca_div : std_logic_vector(N_CLK -1 downto 0);
+
+  attribute mark_debug                : string;
+  attribute mark_debug of clk_sca     : signal is "true";
+  attribute mark_debug of clk_sca_div : signal is "true";
 begin
 
 -- Infrastructure
 
   ipbus_infra : entity work.ipbus_gmii_infra
+    generic map(
+      CLK_AUX_FREQ => 160.0
+      )
     port map(
       sysclk_p     => sysclk_p,
       sysclk_n     => sysclk_n,
@@ -99,13 +108,13 @@ begin
       ipb_out      => ipb_out
       );
 
-  leds(3 downto 2) <= '0' & userled;
+  leds(3 downto 2) <= sca_clocks_locked;
   phy_rst          <= not phy_rst_e;
 
 --      mac_addr <= X"020ddba1151" & dip_sw; -- Careful here, arbitrary addresses do not always work
 --      ip_addr <= X"c0a8c81" & dip_sw; -- 192.168.200.16+n
   mac_addr <= X"020ddba1151" & "0000";  -- Careful here, arbitrary addresses do not always work
-  ip_addr  <= X"c0a8c81" & "0000";               -- 192.168.200.16+n
+  ip_addr  <= X"c0a8c81" & "0000";      -- 192.168.200.16+n
 
 -- ipbus slaves live in the entity below, and can expose top-level ports
 -- The ipbus fabric is instantiated within.
@@ -114,14 +123,14 @@ begin
     generic map(
       N_DRP => N_DRP,
       N_CLK => N_CLK
-    )
+      )
     port map(
       ipb_clk        => clk_ipb,
       ipb_rst        => rst_ipb,
       ipb_in         => ipb_out,
       ipb_out        => ipb_in,
---                      clk => clk_aux,
---                      rst => rst_aux,
+      clk            => clk_aux,
+      rst            => rst_aux,
       -- Global
       nuke           => nuke,
       soft_rst       => soft_rst,
@@ -139,17 +148,19 @@ begin
       dac8568_data_g => dac8568_data_g,
       dac8568_data_h => dac8568_data_h,
       --SCA
-      start_pad=> start_pad,
-      trigger_pad=> trigger_pad,
-      enable_r_dff=> enable_r_dff,
-      din_dff=> din_dff,
-      bit_0_cp=> bit_0_cp,
-      bit_1_cp=> bit_1_cp,
+      start_pad      => start_pad,
+      trigger_pad    => trigger_pad,
+      enable_r_dff   => enable_r_dff,
+      din_dff        => din_dff,
+      bit_0_cp       => bit_0_cp,
+      bit_1_cp       => bit_1_cp,
       -- MMCM DRP Ports
-      drp_out => drp_m2s,
-	  drp_in => drp_s2m,
-	  -- FREQ CTR
-	  clk_ctr_in => clk_sca_div
+      locked         => sca_clocks_locked,
+      rst_mmcm       => rst_mmcm,
+      drp_out        => drp_m2s,
+      drp_in         => drp_s2m,
+      -- FREQ CTR
+      clk_ctr_in     => clk_sca_div
       );
 
   inst_dac_8568 : entity work.dac_inter8568
@@ -171,51 +182,52 @@ begin
       din  => DAC_DIN,
       sclk => DAC_SCLK,
       syn  => DAC_SYNC_N
-      ); 
+      );
 
   inst_sca_control : entity work.sca_control
     generic map(
       N_DRP => N_DRP
       )
     port map(
-      rst         => rst,
-      clk_125     => clk_125M,
-      clk_REF     => clk_REF,
-      clk_DFF     => clk_DFF,
-      locked      => sca_clocks_locked,
+      rst      => rst_aux,
+      clk      => clk_aux,
+      clk_REF  => clk_REF,
+      clk_DFF  => clk_DFF,
       -- MMCM DRP Ports
-      drp_out => drp_s2m,
-	  drp_in => drp_m2s
+      locked   => sca_clocks_locked,
+      rst_mmcm => rst_mmcm,
+      drp_out  => drp_s2m,
+      drp_in   => drp_m2s
       );
-  
+
   clk_REF_OBUFDS_inst : OBUFDS
-   generic map (
-      IOSTANDARD => "DEFAULT", -- Specify the output I/O standard
-      SLEW => "SLOW")          -- Specify the output slew rate
-   port map (
-      O => clk_REF_p,     -- Diff_p output (connect directly to top-level port)
-      OB => clk_REF_n,   -- Diff_n output (connect directly to top-level port)
-      I => clk_REF      -- Buffer input 
-   );
-   
-   clk_DFF_OBUFDS_inst : OBUFDS
-   generic map (
-      IOSTANDARD => "DEFAULT", -- Specify the output I/O standard
-      SLEW => "SLOW")          -- Specify the output slew rate
-   port map (
-      O => clk_DFF_p,     -- Diff_p output (connect directly to top-level port)
-      OB => clk_DFF_n,   -- Diff_n output (connect directly to top-level port)
-      I => clk_DFF      -- Buffer input 
-   );     
- 
-  clk_sca <= clk_DFF & clk_REF; 
-  inst_freq_div: entity work.freq_ctr_div
-	generic map(
-		N_CLK => N_CLK
-	)
-	port map(
-		clk => clk_sca,
-		clkdiv =>  clk_sca_div
-	);
+    generic map (
+      IOSTANDARD => "DEFAULT",          -- Specify the output I/O standard
+      SLEW       => "SLOW")             -- Specify the output slew rate
+    port map (
+      O  => clk_REF_p,  -- Diff_p output (connect directly to top-level port)
+      OB => clk_REF_n,  -- Diff_n output (connect directly to top-level port)
+      I  => clk_REF                     -- Buffer input 
+      );
+
+  clk_DFF_OBUFDS_inst : OBUFDS
+    generic map (
+      IOSTANDARD => "DEFAULT",          -- Specify the output I/O standard
+      SLEW       => "SLOW")             -- Specify the output slew rate
+    port map (
+      O  => clk_DFF_p,  -- Diff_p output (connect directly to top-level port)
+      OB => clk_DFF_n,  -- Diff_n output (connect directly to top-level port)
+      I  => clk_DFF                     -- Buffer input 
+      );
+
+  clk_sca <= clk_DFF & clk_REF;
+  inst_freq_div : entity work.freq_ctr_div
+    generic map(
+      N_CLK => N_CLK
+      )
+    port map(
+      clk    => clk_sca,
+      clkdiv => clk_sca_div
+      );
 
 end rtl;
