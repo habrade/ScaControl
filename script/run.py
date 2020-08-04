@@ -2,47 +2,54 @@
 
 ######################################################################
 import time
-import uhal
-import logging
 
-from lib.global_device import GlobalDevice
-from lib.sca_device import ScaDevice
+import coloredlogs
+import logging
 from lib.freq_ctr_device import FreqCtr
+from lib.global_device import GlobalDevice
+from lib.ipbus_link import IPbusLink
+from lib.sca_device import ScaDevice
 
 ######################################################################
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+coloredlogs.install(level='DEBUG')
+coloredlogs.install(level='DEBUG', logger=log)
 
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
 if __name__ == '__main__':
-    device_ip = "192.168.200.106"
-    device_uri = "ipbusudp-2.0://" + device_ip + ":50001"
-    # address_table_name = sys.argv[2]
-    address_table_name = "../etc/address.xml"
-    address_table_uri = "file://" + address_table_name
-
-    uhal.setLogLevelTo(uhal.LogLevel.WARNING)
-    hw = uhal.getDevice("HappyDaq.udp.0", device_uri, address_table_uri)
-
+    hw = IPbusLink().get_hw()
     global_dev = GlobalDevice(hw)
     sca_dev = ScaDevice(hw)
     freq_ctr_dev = FreqCtr(hw)
 
     ## Soft reset
+    # global_dev.set_nuke()
     global_dev.set_soft_rst()
 
-    ## Set Sca Clocks
-    ## parameters: Do, M, D, clkin = 125MHz
-    ## Frq: (clkin * M)/(DO * D)
-    sca_dev.set_clock(1, 1, 1, "clk_ref")
-    sca_dev.set_clock(1, 1, 1, "clk_dff")
 
-    ## Frequency counter
-    freq_ctr_dev.get_chn_freq(0)
+	## Set SCA clocks
+    Fout_ref = 6.2
+    Fout_dff = 10.5
+    Precision = 0.1  ## Unit: Hundred percent
+
+    chn = 0
+    sca_dev.set_frq(chn, Fout_ref, Precision)
+    time.sleep(1)
+    freq_ref = freq_ctr_dev.get_chn_freq(chn)
+    log.info("Tested Ref Clock frequency is : {}".format(freq_ref))
+
+    time.sleep(5)
+
+    chn = 1
+    sca_dev.set_frq(chn, Fout_dff, Precision)
+    time.sleep(1)
+    freq_dff = freq_ctr_dev.get_chn_freq(chn)
+    log.info("Tested Dff Clock frequency is : {}".format(freq_dff))
 
     ## Set Sca IO
     sca_dev.set_bit0(True)
@@ -52,4 +59,3 @@ if __name__ == '__main__':
     sca_dev.trigger(True)
     time.sleep(0.001)
     sca_dev.trigger(False)
-
