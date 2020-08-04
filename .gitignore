@@ -7,3 +7,8 @@
 /sim/work/
 /readout.srcs/
 /.idea/
+/SCA_Control.cache/
+/SCA_Control.hw/
+/SCA_Control.ip_user_files/
+/SCA_Control.runs/
+
