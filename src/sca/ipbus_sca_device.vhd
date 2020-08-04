@@ -46,8 +46,8 @@ entity ipbus_sca_device is
     ipb_in  : in  ipb_wbus;
     ipb_out : out ipb_rbus;
 
-    reg_slv_clk : in std_logic;
-    reg_slv_rst : in std_logic;
+    clk : in std_logic;
+    rst : in std_logic;
 
     -- Control Port
     start_pad    : out std_logic;
@@ -76,11 +76,11 @@ architecture behv of ipbus_sca_device is
   signal stat_reg_stb : std_logic_vector(N_STAT-1 downto 0);
 
   -- IPbus drp
-  signal drp_rst      : std_logic_vector(N_DRP-1 downto 0);
-  
-    -- Debug
-  attribute mark_debug                      : string;
-  attribute mark_debug of drp_rst           : signal is "true";
+  signal drp_rst : std_logic_vector(N_DRP-1 downto 0);
+
+  -- Debug
+  attribute mark_debug            : string;
+  attribute mark_debug of drp_rst : signal is "true";
 
 begin
 
@@ -97,8 +97,8 @@ begin
       ipb_in  => ipb_in,
       ipb_out => ipb_out,
 
-      reg_slave_clk => reg_slv_clk,
-      reg_rst       => reg_slv_rst,
+      clk => clk,
+      rst => rst,
 
       -- control/state registers
       ctrl         => ctrl,
@@ -113,9 +113,9 @@ begin
       );
 
   -- control
-  process(reg_slv_clk)
+  process(clk)
   begin
-    if rising_edge(reg_slv_clk) then
+    if rising_edge(clk) then
       -- SCA IO
       start_pad    <= ctrl(0)(0);
       trigger_pad  <= ctrl(0)(1);
@@ -130,9 +130,9 @@ begin
   end process;
 
   -- status
-  process(reg_slv_clk)
+  process(clk)
   begin
-    if rising_edge(reg_slv_clk) then
+    if rising_edge(clk) then
       stat(0)(1 downto 0) <= locked;
     end if;
   end process;

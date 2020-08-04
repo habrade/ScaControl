@@ -48,13 +48,13 @@ entity ipbus_slave_reg_drp is
     ipb_in  : in  ipb_wbus;
     ipb_out : out ipb_rbus;
 
-    reg_rst      : in  std_logic;
-    reg_slave_clk     : in  std_logic:='0';
-    
-    ctrl         : out ipb_reg_v(integer_max(N_CTRL,1)-1 downto 0);
-    ctrl_reg_stb : out std_logic_vector(integer_max(N_CTRL,1)-1 downto 0);
-    stat         : in  ipb_reg_v(integer_max(N_STAT,1)-1 downto 0);
-    stat_reg_stb : out std_logic_vector(integer_max(N_STAT,1)-1 downto 0);
+    clk : in std_logic;
+    rst : in std_logic;
+
+    ctrl         : out ipb_reg_v(integer_max(N_CTRL, 1)-1 downto 0);
+    ctrl_reg_stb : out std_logic_vector(integer_max(N_CTRL, 1)-1 downto 0);
+    stat         : in  ipb_reg_v(integer_max(N_STAT, 1)-1 downto 0);
+    stat_reg_stb : out std_logic_vector(integer_max(N_STAT, 1)-1 downto 0);
 
     -- MMCM DRP Ports
     drp_rst : in  std_logic_vector(N_DRP-1 downto 0);
@@ -72,17 +72,18 @@ architecture behv of ipbus_slave_reg_drp is
   signal ipbw : ipb_wbus_array(NSLV-1 downto 0);
   signal ipbr : ipb_rbus_array(NSLV-1 downto 0);
 
-  signal rst_r : std_logic;
+  signal rst_r   : std_logic;
+  signal rst_drp : std_logic_vector(N_DRP-1 downto 0);
 
 begin
-  rst_r   <= ipb_rst or reg_rst;
 
+  rst_r <= ipb_rst or rst;
 
   inst_device_fabric : entity work.ipbus_fabric_inside_device
     generic map(
-      N_CTRL  => N_CTRL,                --the control register number
-      N_STAT  => N_STAT,                --the status register number
-      N_DRP => N_DRP
+      N_CTRL => N_CTRL,                 --the control register number
+      N_STAT => N_STAT,                 --the status register number
+      N_DRP  => N_DRP
       )
     port map(
       ipb_in          => ipb_in,
@@ -96,8 +97,8 @@ begin
   gen_reg : if REG_NSLV = 1 generate
     inst_ipbus_slave : entity work.ipbus_ctrlreg_v
       generic map(
-        N_CTRL => N_CTRL,
-        N_STAT => N_STAT,
+        N_CTRL     => N_CTRL,
+        N_STAT     => N_STAT,
         SWAP_ORDER => true
         )
       port map(
@@ -114,10 +115,11 @@ begin
 
   drp_bridges : if N_DRP > 0 generate
     drp_bridges_gen : for index in N_DRP-1 downto 0 generate
+      rst_drp(index) <= drp_rst(index) or ipb_rst;
       inst_ipbus_drp : entity work.ipbus_drp_bridge
         port map(
           clk     => ipb_clk,
-          rst     => ipb_rst or drp_rst(index),
+          rst     => rst_drp(index),
           ipb_in  => ipbw(REG_NSLV+index),
           ipb_out => ipbr(REG_NSLV+index),
           drp_out => drp_out(index),

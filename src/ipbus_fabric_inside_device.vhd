@@ -36,9 +36,10 @@ use work.ipbus_reg_types_new.all;
 
 entity ipbus_fabric_inside_device is
   generic(
-    N_CTRL : integer := 1;              --the control register number ;
-    N_STAT : integer := 1;              --the status register number
-    N_DRP  : integer := 1
+    N_CTRL     : integer := 1;          --the control register number ;
+    N_STAT     : integer := 1;          --the status register number
+    N_DRP      : integer := 1;
+    ADDR_SHIFT : integer := 8
     );
   port(
     ipb_in          : in  ipb_wbus;
@@ -55,20 +56,19 @@ architecture behv of ipbus_fabric_inside_device is
   constant REG_SLV_NUM : integer := reg_slave_num(N_CTRL, N_STAT);
   constant NSLV        : integer := REG_SLV_NUM+N_DRP;
 
-  constant MAX_ADDR_NUM : integer := max_port_addr_width(N_CTRL, N_STAT, N_DRP);
+  constant MAX_ADDR_NUM : integer := max_port_addr_width(N_CTRL, N_STAT, N_DRP)+ADDR_SHIFT;  --For Drp address
 
   signal ipb_reg_strobe : std_logic;
   signal ipb_drp_strobe : std_logic_vector(N_DRP-1 downto 0);
---    signal  ipb_rfifo_strobe    : std_logic_vector(READ_FIFO_NUM-1 downto 0);
 
   signal sel                : integer := 99;
   signal ored_ack, ored_err : std_logic_vector(NSLV downto 0);
   signal qstrobe            : std_logic;
-  
+
   --Debug
-  attribute mark_debug                  : string;
-  attribute mark_debug of sel           : signal is "true";
-  
+  attribute mark_debug        : string;
+  attribute mark_debug of sel : signal is "true";
+
 begin
 
   ored_ack(NSLV) <= '0';
@@ -97,9 +97,9 @@ begin
     if ipb_in.ipb_addr(MAX_ADDR_NUM-1) = '0' and REG_SLV_NUM = 1 then
       sel <= 0;
     elsif REG_SLV_NUM = 0 then
-      sel <= to_integer(unsigned(ipb_in.ipb_addr(MAX_ADDR_NUM-1 downto 2)));
+      sel <= to_integer(unsigned(ipb_in.ipb_addr(MAX_ADDR_NUM-1 downto (2+ADDR_SHIFT))));
     elsif ipb_in.ipb_addr(MAX_ADDR_NUM-1) = '1' and (N_DRP > 0) then
-      sel <= to_integer(unsigned(ipb_in.ipb_addr(MAX_ADDR_NUM-2 downto 2))) + REG_SLV_NUM;
+      sel <= to_integer(unsigned(ipb_in.ipb_addr(MAX_ADDR_NUM-2 downto (2+ADDR_SHIFT)))) + REG_SLV_NUM;
     else
       sel <= 99;
     end if;

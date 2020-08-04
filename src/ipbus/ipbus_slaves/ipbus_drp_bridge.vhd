@@ -65,28 +65,23 @@ begin
   stb <= ipb_in.ipb_strobe and not busy;
   cyc <= stb and not stb_d;
 
-  process(rst)
+  process(all)
   begin
     if (rst = '1') then
-      drp_out.addr <= (others => '0');
-      drp_out.en   <= '0';
-      drp_out.data <= (others => '0');
-      drp_out.we   <= '0';
-
-      ipb_out.ipb_ack   <= '0';
-      ipb_out.ipb_err   <= '0';
-      ipb_out.ipb_rdata <= (others => '0');
+      drp_out <= DRP_WBUS_NULL;
+      ipb_out <= IPB_RBUS_NULL;
     else
-
-      drp_out.addr <= ipb_in.ipb_addr(31 downto 16);
+      drp_out.addr <= ipb_in.ipb_addr(15 downto 0);
       drp_out.en   <= cyc;
       drp_out.data <= ipb_in.ipb_wdata(15 downto 0);
       drp_out.we   <= cyc and ipb_in.ipb_write;
-
+      
       ipb_out.ipb_ack   <= drp_in.rdy and ipb_in.ipb_strobe;
       ipb_out.ipb_err   <= '0';
       ipb_out.ipb_rdata <= X"0000" & drp_in.data;
     end if;
   end process;
+
+
 
 end rtl;
