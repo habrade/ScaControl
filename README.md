@@ -1,4 +1,4 @@
-# SCA Readout
+# SCA Control
 
 #### File Structure
 
