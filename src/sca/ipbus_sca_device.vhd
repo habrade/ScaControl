@@ -78,9 +78,6 @@ architecture behv of ipbus_sca_device is
   -- IPbus drp
   signal drp_rst : std_logic_vector(N_DRP-1 downto 0);
 
-  -- Debug
-  attribute mark_debug            : string;
-  attribute mark_debug of drp_rst : signal is "true";
 
 begin
 

@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="44" Path="/home/sdong/work/sca_test/ScaControl/SCA_Control.xpr">
+<Project Version="7" Minor="44" Path="/home/sdong/work/SCA_CCNU/ScaControl-Firmware/SCA_Control.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="a4376d7657b44bc8a16487870f38b549"/>
@@ -436,7 +436,13 @@
           <Attr Name="ProcessingOrder" Val="EARLY"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/constrains/debug.xdc">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="implementation"/>
+        </FileInfo>
+      </File>
       <Config>
+        <Option Name="TargetConstrsFile" Val="$PPRDIR/constrains/debug.xdc"/>
         <Option Name="ConstrsType" Val="XDC"/>
       </Config>
     </FileSet>

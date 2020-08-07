@@ -13,7 +13,7 @@ use ieee.numeric_std.all;
 
 package ipbus_decode_payload is
 
-  constant IPBUS_SEL_WIDTH        :    positive := 2;  -- Should be enough for now?
+  constant IPBUS_SEL_WIDTH        :    positive := 3;  -- Should be enough for now?
   subtype ipbus_sel_t is std_logic_vector(IPBUS_SEL_WIDTH - 1 downto 0);
   function ipbus_sel_payload(addr : in std_logic_vector(31 downto 0)) return ipbus_sel_t;
 
@@ -34,13 +34,13 @@ package body ipbus_decode_payload is
     variable sel : ipbus_sel_t;
   begin
 
-    if std_match(addr, "00------------------------------") then
+    if std_match(addr, "000-----------------------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_GLOBAL, IPBUS_SEL_WIDTH));  
-    elsif std_match(addr, "01------------------------------") then
+    elsif std_match(addr, "001-----------------------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_DAC8568, IPBUS_SEL_WIDTH)); 
-    elsif std_match(addr, "10------------------------------") then
+    elsif std_match(addr, "010-----------------------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_SCA, IPBUS_SEL_WIDTH)); 
-    elsif std_match(addr, "11------------------------------") then
+    elsif std_match(addr, "011-----------------------------") then
       sel := ipbus_sel_t(to_unsigned(N_SLV_FREQ_CTR, IPBUS_SEL_WIDTH));
     else
       sel := ipbus_sel_t(to_unsigned(N_SLAVES, IPBUS_SEL_WIDTH));
