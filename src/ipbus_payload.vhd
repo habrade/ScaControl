@@ -94,6 +94,9 @@ begin
       ipb_in  => ipbw(N_SLV_DAC8568),
       ipb_out => ipbr(N_SLV_DAC8568),
 
+      clk => clk,
+      rst => rst,
+      
       -- DAC8568  
       dac8568_busy => dac8568_busy,
 

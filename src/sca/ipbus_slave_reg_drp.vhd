@@ -38,9 +38,10 @@ use work.drp_decl.all;
 
 entity ipbus_slave_reg_drp is
   generic(
-    N_STAT : integer := 1;
-    N_CTRL : integer := 1;
-    N_DRP  : integer := 1
+    SYNC_REG_ENA : boolean := false;
+    N_STAT       : integer := 1;
+    N_CTRL       : integer := 1;
+    N_DRP        : integer := 1
     );
   port(
     ipb_clk : in  std_logic;
@@ -95,23 +96,44 @@ begin
 
 
   gen_reg : if REG_NSLV = 1 generate
-    inst_ipbus_slave : entity work.ipbus_ctrlreg_v
-      generic map(
-        N_CTRL     => N_CTRL,
-        N_STAT     => N_STAT,
-        SWAP_ORDER => true
-        )
-      port map(
-        clk       => ipb_clk,
-        reset     => rst_r,
-        ipbus_in  => ipbw(0),
-        ipbus_out => ipbr(0),
-        d         => stat,
-        q         => ctrl,
-        stb       => ctrl_reg_stb
-        );
-  end generate;
+    reg_gen_0 : if SYNC_REG_ENA = true generate
+      inst_ipbus_slave_0 : entity work.ipbus_ctrlreg_v
+        generic map(
+          N_CTRL     => N_CTRL,
+          N_STAT     => N_STAT,
+          SWAP_ORDER => true
+          )
+        port map(
+          clk       => ipb_clk,
+          reset     => rst_r,
+          ipbus_in  => ipbw(0),
+          ipbus_out => ipbr(0),
+          d         => stat,
+          q         => ctrl,
+          stb       => ctrl_reg_stb
+          );
+    end generate;
 
+    reg_gen_1 : if SYNC_REG_ENA = false generate
+      inst_ipbus_slave_1 : entity work.ipbus_syncreg_v
+        generic map(
+          N_CTRL     => N_CTRL,
+          N_STAT     => N_STAT,
+          SWAP_ORDER => true
+          )
+        port map (
+          clk     => ipb_clk,
+          rst     => rst_r,
+          ipb_in  => ipbw(0),
+          ipb_out => ipbr(0),
+          slv_clk => clk,
+          d       => stat,
+          q       => ctrl,
+          stb     => ctrl_reg_stb(N_CTRL-1 downto 0),
+          rstb    => stat_reg_stb(N_STAT-1 downto 0)
+          );
+    end generate;
+  end generate;
 
   drp_bridges : if N_DRP > 0 generate
     drp_bridges_gen : for index in N_DRP-1 downto 0 generate

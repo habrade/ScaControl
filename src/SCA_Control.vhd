@@ -70,7 +70,7 @@ architecture rtl of SCA_Control is
   constant N_CLK              : integer := 2;
   signal clk_sca, clk_sca_div : std_logic_vector(N_CLK -1 downto 0);
 
-  constant CLK_AUX_FREQ : real := 160.0;
+  constant CLK_AUX_FREQ : real := 50.0;
 
 
   attribute mark_debug                      : string;
@@ -134,8 +134,8 @@ begin
       ipb_out => ipb_in,
 
       -- Slave clocks
-      clk            => clk_ipb,
-      rst            => rst_ipb,
+      clk            => clk_aux,
+      rst            => rst_aux,
       -- Global
       nuke           => nuke,
       soft_rst       => soft_rst,

@@ -68,12 +68,13 @@ end ipbus_sca_device;
 architecture behv of ipbus_sca_device is
 
   -- IPbus reg
-  constant N_STAT     : integer := 1;
-  constant N_CTRL     : integer := 2;
-  signal stat         : ipb_reg_v(N_STAT-1 downto 0);
-  signal ctrl         : ipb_reg_v(N_CTRL-1 downto 0);
-  signal ctrl_reg_stb : std_logic_vector(N_CTRL-1 downto 0);
-  signal stat_reg_stb : std_logic_vector(N_STAT-1 downto 0);
+  constant SYNC_REG_ENA : boolean := false;
+  constant N_STAT       : integer := 1;
+  constant N_CTRL       : integer := 2;
+  signal stat           : ipb_reg_v(N_STAT-1 downto 0);
+  signal ctrl           : ipb_reg_v(N_CTRL-1 downto 0);
+  signal ctrl_reg_stb   : std_logic_vector(N_CTRL-1 downto 0);
+  signal stat_reg_stb   : std_logic_vector(N_STAT-1 downto 0);
 
   -- IPbus drp
   signal drp_rst : std_logic_vector(N_DRP-1 downto 0);
@@ -83,9 +84,10 @@ begin
 
   inst_ipbus_slave_reg_drp : entity work.ipbus_slave_reg_drp
     generic map(
-      N_STAT => N_STAT,
-      N_CTRL => N_CTRL,
-      N_DRP  => N_DRP
+      SYNC_REG_ENA => SYNC_REG_ENA,
+      N_STAT       => N_STAT,
+      N_CTRL       => N_CTRL,
+      N_DRP        => N_DRP
       )
     port map(
 
